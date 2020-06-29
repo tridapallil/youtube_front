@@ -40,13 +40,15 @@ export default function Profile() {
     async function loadWeek() {
       const response = await api.get('weeks');
 
-      setSunday(response.data.sunday);
-      setMonday(response.data.monday);
-      setTuesday(response.data.tuesday);
-      setWednesday(response.data.wednesday);
-      setThursday(response.data.thursday);
-      setFriday(response.data.friday);
-      setSaturday(response.data.saturday);
+      if (response.data) {
+        setSunday(response.data.sunday);
+        setMonday(response.data.monday);
+        setTuesday(response.data.tuesday);
+        setWednesday(response.data.wednesday);
+        setThursday(response.data.thursday);
+        setFriday(response.data.friday);
+        setSaturday(response.data.saturday);
+      }
     }
     loadWeek();
   }, []);
