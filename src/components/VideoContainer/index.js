@@ -1,26 +1,38 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+import moment from 'moment';
+import history from '../../services/history';
 
 import { Container, InfoContainer } from './styles';
 
-function VideoContainer() {
+function VideoContainer({ video, watching, search }) {
+  function submitSearch() {
+    if (watching) {
+      history.push({
+        pathname: '/details',
+        search: `?search=${search}`,
+      });
+    }
+  }
   return (
-    <Container key={10}>
-      <img
-        src={
-          'https://assets.propmark.com.br/legacy/upload/2019/04/5cb611c9cfe4e-5ce550b5e0ffd-980x480.JPG'
-            ? `https://assets.propmark.com.br/legacy/upload/2019/04/5cb611c9cfe4e-5ce550b5e0ffd-980x480.JPG`
-            : 'https://assets.propmark.com.br/legacy/upload/2019/04/5cb611c9cfe4e-5ce550b5e0ffd-980x480.JPG'
-        }
-        alt="teste"
-      />
+    <Container onClick={() => submitSearch()} watching={watching} key={10}>
+      <img src={video.thumb ? video.thumb : video.thumb} alt="teste" />
       <InfoContainer>
         <div>
-          <h4>Trailer GOT</h4>
-          <text>5:42</text>
+          <h4>{video.title}</h4>
+          <p>{`${moment.duration(video.duration).minutes()}:${moment
+            .duration(video.duration)
+            .seconds()}`}</p>
         </div>
       </InfoContainer>
+      {watching ? <p>Assistindo</p> : ''}
     </Container>
   );
 }
 
 export default VideoContainer;
+
+VideoContainer.propTypes = {
+  video: PropTypes.objectOf(Object).isRequired,
+  watching: PropTypes.objectOf(Object).isRequired,
+};

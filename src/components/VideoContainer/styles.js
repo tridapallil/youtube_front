@@ -2,17 +2,20 @@ import styled from 'styled-components';
 
 export const Container = styled.li`
   border-radius: 4px;
-  /* display: flex; */
   min-height: 100%;
-  /* flex: 1; */
-
-  opacity: ${props => (props.past ? 0.6 : 1)};
+  cursor: ${props => (props.watching ? 'pointer' : 'auto')};
 
   img {
     align-self: left;
-    /* max-height: 100%; */
     border-radius: 15px;
     max-width: 100%;
+  }
+
+  p {
+    color: #e30200;
+    text-align: end;
+    font-weight: bold;
+    font-size: 12px;
   }
 `;
 
@@ -28,7 +31,7 @@ export const InfoContainer = styled.div`
       color: #fff;
     }
 
-    > text {
+    > p {
       color: #fff;
     }
   }

@@ -1,20 +1,31 @@
-import styled from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { darken } from 'polished';
 
 export const Container = styled.div`
   max-width: 86%;
   margin: auto;
   margin-top: 30px;
-  display: flex;
-  flex: 1;
+  @media only screen and (min-width: 650px) {
+    display: flex;
+    flex: 1;
+  }
 
   header {
     display: flex;
     flex: 1;
+    justify-content: space-between;
 
-    > strong {
-      cursor: pointer;
-      margin-left: 10px;
+    > div {
+      display: flex;
+      flex: 1;
+      a {
+        margin-left: 10px;
+        display: block;
+        color: #fff;
+        font-size: 20px;
+        margin-bottom: 10px;
+        font-weight: normal;
+      }
     }
   }
 
@@ -65,8 +76,19 @@ export const Container = styled.div`
   }
 `;
 
+export const NextVideo = styled.strong`
+  display: block;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  font-weight: normal;
+`;
+
 export const LeftContainer = styled.div`
-  width: 70%;
+  @media only screen and (min-width: 650px) {
+    width: 70%;
+  }
   margin-right: 10px;
   margin-bottom: 25px;
 
@@ -103,7 +125,9 @@ export const LeftContainer = styled.div`
 export const RightContainer = styled.div`
   margin-left: 20px;
   margin-bottom: 25px;
-  width: 30%;
+  @media only screen and (min-width: 650px) {
+    width: 30%;
+  }
 
   ul {
     display: grid;
@@ -166,4 +190,33 @@ export const Tag = styled.span`
     background: ${darken(0.08, '#e30200')};
     border: 1px solid #e30200;
   }
+`;
+
+const rotate = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
+export const Empty = styled.div.attrs(props => ({
+  type: 'submit',
+  disabled: props.loading,
+}))`
+  h1 {
+    text-align: center;
+    margin-top: 20%;
+    color: #999;
+  }
+  text-align: center;
+  ${props =>
+    props.loading &&
+    css`
+      svg {
+        margin-top: 20%;
+        animation: ${rotate} 2s linear infinite;
+      }
+    `}
 `;

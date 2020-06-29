@@ -12,13 +12,31 @@ export function signInSuccess(token, user) {
   };
 }
 
-export function signUpRequest(name, email, password) {
+export function signUpRequest(
+  name,
+  email,
+  password,
+  sunday,
+  monday,
+  tuesday,
+  wednesday,
+  thursday,
+  friday,
+  saturday
+) {
   return {
     type: '@auth/SIGN_UP_REQUEST',
     payload: {
       name,
       email,
       password,
+      sunday,
+      monday,
+      tuesday,
+      wednesday,
+      thursday,
+      friday,
+      saturday,
     },
   };
 }

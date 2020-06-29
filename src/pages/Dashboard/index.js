@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {
-  setHours,
-  setMinutes,
-  setSeconds,
-  isBefore,
-  isEqual,
-  parseISO,
-} from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
-import { Input } from '@rocketseat/unform';
+import { Input, Form } from '@rocketseat/unform';
+import { toast } from 'react-toastify';
 import api from '~/services/api';
+import history from '../../services/history';
 
 import {
   Container,
@@ -21,59 +14,93 @@ import {
 
 import VideoContainer from '~/components/VideoContainer';
 
-const range = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
-
 export default function Dashboard() {
-  const [schedule, setSchedule] = useState([]);
-  const [date, setDate] = useState(new Date());
+  const [recentSearcheds, setRecentSearcheds] = useState([]);
+  const [recentVideos, setRecentVideos] = useState([]);
+  const [watchingId, setWatchingId] = useState('');
+  const [watchingSearch, setWatchingSearch] = useState('');
 
   useEffect(() => {
-    async function loadSchedule() {
-      const response = await api.get('schedules', { params: { date } });
+    async function loadSearched() {
+      const response = await api.get('searched');
 
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-      const data = range.map(hour => {
-        const checkDate = setSeconds(setMinutes(setHours(date, hour), 0), 0);
-        const compareDate = utcToZonedTime(checkDate, timezone);
-
-        return {
-          time: `${hour}:00h`,
-          past: isBefore(compareDate, new Date()),
-          appointment: response.data.find(a =>
-            isEqual(parseISO(a.date), compareDate)
-          ),
-        };
-      });
-
-      setSchedule(data);
+      setRecentSearcheds(response.data);
     }
-    loadSchedule();
-  }, [date, schedule]);
+
+    async function loadVideos() {
+      const response = await api.get('watched');
+
+      setRecentVideos(response.data);
+    }
+
+    async function loadWatching() {
+      const response = await api.get('watching');
+
+      setWatchingSearch(response.data.search);
+      setWatchingId(response.data._id);
+    }
+
+    loadSearched();
+    loadVideos();
+    loadWatching();
+  }, []);
+
+  function handleSubmit({ search }) {
+    if (watchingId && search !== watchingSearch) {
+      toast.error(
+        `Você já está assistindo um vídeo de ${watchingSearch}. Pesquise novamente ou acesse clicando no vídeo assistindo.`
+      );
+    }
+    if (search && (search === watchingSearch || !watchingSearch)) {
+      history.push({
+        pathname: '/details',
+        search: `?search=${search}`,
+      });
+    }
+  }
+
+  function handleRecent(value) {
+    history.push({
+      pathname: '/details',
+      search: `?search=${value}`,
+    });
+  }
 
   return (
     <Container>
       <LeftContainer>
         <strong>Pesquisar</strong>
-        <form>
+        <Form onSubmit={handleSubmit}>
           <Input name="search" placeholder="Pesquisar" />
-        </form>
+        </Form>
+        <strong>Pesquisas Recentes</strong>
         <TagsList>
-          <Tag>GOT </Tag>
-          <Tag>Lucas Lira </Tag>
-          <Tag>Greg Ferreira </Tag>
+          {recentSearcheds.length > 0 ? (
+            recentSearcheds.map(searched => (
+              <Tag onClick={() => handleRecent(searched.search)}>
+                {searched.search}{' '}
+              </Tag>
+            ))
+          ) : (
+            <p>Sem pesquisas recentes</p>
+          )}
         </TagsList>
       </LeftContainer>
       <RightContainer>
-        <strong>Recentes</strong>
-        <ul>
-          <VideoContainer />
-          <VideoContainer />
-          <VideoContainer />
-          <VideoContainer />
-          {/* {schedule.map(time => (
-          ))} */}
-        </ul>
+        <strong>Videos Recentes</strong>
+        {recentVideos.length > 0 ? (
+          <ul>
+            {recentVideos.map(video => (
+              <VideoContainer
+                search={video.search}
+                watching={video._id === watchingId}
+                video={video}
+              />
+            ))}
+          </ul>
+        ) : (
+          <p>Sem vídeos recentes</p>
+        )}
       </RightContainer>
     </Container>
   );

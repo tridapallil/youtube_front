@@ -1,104 +1,165 @@
 import React, { useState, useEffect } from 'react';
-import {
-  setHours,
-  setMinutes,
-  setSeconds,
-  isBefore,
-  isEqual,
-  parseISO,
-} from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
-import { FaArrowLeft } from 'react-icons/fa';
+import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
+import queryString from 'query-string';
+import Youtube from 'react-youtube';
+import { FaArrowLeft, FaSpinner } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import api from '~/services/api';
 
 import {
   Container,
+  Empty,
   LeftContainer,
   RightContainer,
   Tag,
   TagsList,
+  NextVideo,
 } from './styles';
 
 import VideoContainerHorizontal from '~/components/VideoContainerHorizontal';
 
-const range = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+export default function Detail({ location }) {
+  const [videos, setVideos] = useState([]);
+  const [commonWords, setCommonWords] = useState([]);
+  const [watchedVideos, setWatchedVideos] = useState([]);
+  const [totalDays, setTotalDays] = useState('');
+  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState('');
+  const [id, setId] = useState('');
+  const [watchingId, setWatchingId] = useState('');
+  const [errorReturn, setErrorReturn] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { search } = queryString.parse(location.search);
 
-export default function Detail() {
-  const [schedule, setSchedule] = useState([]);
-  const [date, setDate] = useState(new Date());
+  const opts = {
+    playerVars: {
+      autoplay: 1,
+      rel: 0,
+      controls: 0,
+      modestbranding: 1,
+      autoPlay: 1,
+      disablekb: 1,
+      loop: 0,
+    },
+  };
 
-  useEffect(() => {
-    async function loadSchedule() {
-      const response = await api.get('schedules', { params: { date } });
+  async function loadVideos(search) {
+    setLoading(true);
+    const response = await api.get('videos', { params: { search } });
 
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setVideos(response.data.arrResponse);
+    setCommonWords(response.data.topWords);
+    setTotalDays(response.data.totalDays);
 
-      const data = range.map(hour => {
-        const checkDate = setSeconds(setMinutes(setHours(date, hour), 0), 0);
-        const compareDate = utcToZonedTime(checkDate, timezone);
-
-        return {
-          time: `${hour}:00h`,
-          past: isBefore(compareDate, new Date()),
-          appointment: response.data.find(a =>
-            isEqual(parseISO(a.date), compareDate)
-          ),
-        };
+    const responseVideo = await api
+      .get('watch', { params: { search } })
+      .catch(error => {
+        if (error) {
+          setLoading(false);
+          setErrorReturn(true);
+        }
+        return false;
       });
 
-      setSchedule(data);
+    if (responseVideo.data) {
+      setTitle(responseVideo.data.title);
+      setDescription(responseVideo.data.description);
+      setId(responseVideo.data.videoId);
+      setLoading(false);
     }
-    loadSchedule();
-  }, [date, schedule]);
+    const responseWatched = await api.get('watched', { params: { search } });
+
+    const watchedList = responseWatched.data.map(row => {
+      return row.videoId;
+    });
+
+    setWatchedVideos(watchedList);
+  }
+  useEffect(() => {
+    async function loadWatching() {
+      const response = await api.get('watching');
+
+      setWatchingId(response.data.videoId);
+    }
+    loadWatching();
+    loadVideos(search);
+  }, [search]);
+
+  async function nextVideo() {
+    const response = await api.get('watching');
+    if (response.data.videoId) {
+      toast.error(`Você precisa finalizar o vídeo para inicializar outro.`);
+    }
+    if (!response.data.videoId) {
+      loadVideos(search);
+    }
+  }
 
   return (
-    <Container>
-      <LeftContainer>
-        <header>
-          <FaArrowLeft color="#fff" size={20} />
-          <strong>Voltar</strong>
-        </header>
-        <div>
-          <iframe
-            src="https://www.youtube.com/embed/gbZ52QuaVqw"
-            frameBorder="0"
-            allow=" autoplay; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-        <strong>Kids Claptone</strong>
-        <p>
-          RÜFÜS DU SOL Live from Joshua Tree A film by Alexander George With
-          Tyrone Lindqvist, James Hunt and Jon George Produced by Danny Robson &
-          Alexander George Associate Producer: Irene Ku Assistant Producer:
-          Derek Rickert Assistant Director: Zach Toupin
-        </p>
-        <footer>
-          <strong>Detalhes da Pesquisa para 'Claptone'</strong>
-          <h4>Palavras Recorrentes</h4>
-          <TagsList>
-            <Tag>GOT </Tag>
-            <Tag>Lucas Lira </Tag>
-            <Tag>Greg Ferreira </Tag>
-          </TagsList>
-          <h4>Dias para visualizar todos os vídeos</h4>
-          <p>5 dias</p>
-        </footer>
-      </LeftContainer>
-      <RightContainer>
-        <strong>Próximos</strong>
-        <ul>
-          <VideoContainerHorizontal />
-          <VideoContainerHorizontal />
-          <VideoContainerHorizontal />
-          <VideoContainerHorizontal />
-          <VideoContainerHorizontal />
-          <VideoContainerHorizontal />
-          <VideoContainerHorizontal />
-          {/* {schedule.map(time => (
-          ))} */}
-        </ul>
-      </RightContainer>
-    </Container>
+    <>
+      {loading ? (
+        <Empty loading={loading}>
+          {loading ? <FaSpinner color="#999" size={30} /> : <h1>No results</h1>}
+        </Empty>
+      ) : (
+        <Container>
+          {errorReturn ? (
+            <Empty>
+              <h1>
+                Você já assistiu todos os vídeos ou não há mais vídeos para ver
+                hoje.
+              </h1>
+            </Empty>
+          ) : (
+            <>
+              <LeftContainer>
+                <header>
+                  <div>
+                    <FaArrowLeft color="#fff" size={20} />
+                    <Link to="/dashboard">Voltar</Link>
+                  </div>
+                  <NextVideo onClick={() => nextVideo()}>Próximo</NextVideo>
+                </header>
+                <div>
+                  <Youtube videoId={id} opts={opts} onEnd={() => nextVideo()} />
+                </div>
+                <strong>{title}</strong>
+                <p>{description}</p>
+                <footer>
+                  <strong>Detalhes da Pesquisa para {search}</strong>
+                  <h4>Palavras Recorrentes</h4>
+                  <TagsList>
+                    {commonWords.map(word => (
+                      <Tag>{word.name}</Tag>
+                    ))}
+                  </TagsList>
+                  <h4>Dias para visualizar todos os vídeos</h4>
+                  <p>{totalDays} dias</p>
+                </footer>
+              </LeftContainer>
+              <RightContainer>
+                <strong>Vídeos</strong>
+                <ul>
+                  {videos.map(video => (
+                    <VideoContainerHorizontal
+                      watched={
+                        watchedVideos.indexOf(video.id) > -1 &&
+                        video.id !== watchingId
+                      }
+                      video={video}
+                    />
+                  ))}
+                </ul>
+              </RightContainer>
+            </>
+          )}
+        </Container>
+      )}
+    </>
   );
 }
+
+Detail.propTypes = {
+  location: PropTypes.objectOf(Object).isRequired,
+};

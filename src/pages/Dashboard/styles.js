@@ -3,7 +3,8 @@ import { darken } from 'polished';
 
 export const Container = styled.div`
   max-width: 86%;
-  margin: 20px auto;
+  margin: auto;
+  margin-top: 20px;
 
   form {
     display: flex;
@@ -25,9 +26,14 @@ export const Container = styled.div`
       height: 44px;
       padding: 0 15px;
       margin: 5px 0 15px;
+      transition: all 0.2s ease-in-out;
 
       &::placeholder {
         color: #3c3c3c;
+      }
+
+      &:focus {
+        border-color: #fff;
       }
     }
   }
@@ -50,16 +56,38 @@ export const Container = styled.div`
 
 export const LeftContainer = styled.div`
   width: 100%;
+
+  p {
+    color: #3c3c3c;
+    margin-top: 10px;
+    align-self: center;
+    font-size: 20px;
+  }
 `;
 
 export const RightContainer = styled.div`
   margin-top: 20px;
 
+  > p {
+    color: #3c3c3c;
+    margin-top: 20px;
+    align-self: center;
+    font-size: 20px;
+  }
+
   ul {
+    height: 100%;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    @media only screen and (min-width: 460px) {
+      grid-template-columns: repeat(1, 1fr);
+    }
+    @media only screen and (min-width: 650px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @media only screen and (min-width: 1000px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
     grid-gap: 25px;
-    height: 150px;
   }
 
   > strong {
@@ -98,6 +126,12 @@ export const VideoContainer = styled.li`
 export const TagsList = styled.div`
   display: flex;
   flex: 1;
+  width: auto;
+  @media only screen and (max-width: 650px) {
+    overflow-x: scroll;
+  }
+  overflow-y: hidden;
+  white-space: nowrap;
 `;
 
 export const Tag = styled.span`

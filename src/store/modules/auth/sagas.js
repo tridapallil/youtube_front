@@ -29,12 +29,34 @@ export function* signIn({ payload }) {
 
 export function* signUp({ payload }) {
   try {
-    const { name, email, password } = payload;
-
-    yield call(api.post, 'users', {
+    const {
       name,
       email,
       password,
+      sunday,
+      monday,
+      tuesday,
+      wednesday,
+      thursday,
+      friday,
+      saturday,
+    } = payload;
+
+    const response = yield call(api.post, 'users', {
+      name,
+      email,
+      password,
+    });
+
+    yield call(api.post, 'weeks', {
+      userId: response.data._id,
+      sunday,
+      monday,
+      tuesday,
+      wednesday,
+      thursday,
+      friday,
+      saturday,
     });
 
     history.push('/');
